@@ -1,0 +1,196 @@
+services:
+  # ----------------------------
+  # MySQL (metadata de RAGFlow)
+  # ----------------------------
+  - type: pserv
+    name: bts-rag-flow-mysql
+    runtime: image
+    region: frankfurt
+    plan: starter
+    image:
+      url: mysql:8.0.39
+    disk:
+      name: mysql-data
+      mountPath: /var/lib/mysql
+      sizeGB: 20
+    envVars:
+      - key: MYSQL_DATABASE
+        value: rag_flow
+      - key: MYSQL_USER
+        value: rag_flow
+      - key: MYSQL_PASSWORD
+        generateValue: true
+      - key: MYSQL_ROOT_PASSWORD
+        generateValue: true
+
+  # ----------------------------
+  # MinIO (ficheros subidos)
+  # ----------------------------
+  - type: pserv
+    name: bts-rag-flow-minio
+    runtime: image
+    region: frankfurt
+    plan: starter
+    image:
+      url: quay.io/minio/minio:RELEASE.2025-06-13T11-33-47Z
+    dockerCommand: server --console-address :9001 /data
+    disk:
+      name: minio-data
+      mountPath: /data
+      sizeGB: 50
+    envVars:
+      - key: MINIO_ROOT_USER
+        value: rag_flow
+      - key: MINIO_ROOT_PASSWORD
+        generateValue: true
+
+  # ----------------------------
+  # Redis/Valkey (cola/cache)
+  # ----------------------------
+  - type: pserv
+    name: bts-rag-flow-redis
+    runtime: image
+    region: frankfurt
+    plan: starter
+    image:
+      url: valkey/valkey:8
+    dockerCommand: redis-server --requirepass ${REDIS_PASSWORD} --maxmemory 256mb --maxmemory-policy allkeys-lru
+    disk:
+      name: redis-data
+      mountPath: /data
+      sizeGB: 5
+    envVars:
+      - key: REDIS_PASSWORD
+        generateValue: true
+
+  # ----------------------------
+  # SeekDB (motor doc/vector) - recomendado para Render
+  # ----------------------------
+  - type: pserv
+    name: bts-rag-flow-seekdb
+    runtime: image
+    region: frankfurt
+    plan: starter
+    image:
+      url: oceanbase/seekdb:latest
+    disk:
+      name: seekdb-data
+      mountPath: /var/lib/oceanbase
+      sizeGB: 50
+    envVars:
+      - key: ROOT_PASSWORD
+        generateValue: true
+      - key: MEMORY_LIMIT
+        value: 2G
+      - key: REPORTER
+        value: bts-rag-flow-seekdb
+
+  # ----------------------------
+  # RAGFlow (Web Service público)
+  # ----------------------------
+  - type: web
+    name: bts-rag-flow
+    runtime: image
+    region: frankfurt
+
+    # RAGFlow recomienda recursos altos; en Render, elige un plan con
+    # >= 4 vCPU y >= 16GB RAM según tus necesidades.
+    plan: pro
+
+    image:
+      url: infiniflow/ragflow:v0.24.0
+
+    # IMPORTANTE: inicializa el superusuario en el arranque
+    # (el entrypoint de RAGFlow soporta --init-superuser)
+    dockerCommand: /ragflow/docker/entrypoint.sh --init-superuser
+
+    healthCheckPath: /
+
+    envVars:
+      - key: TZ
+        value: Europe/Madrid
+
+      # Si quieres bloquear registro público:
+      # RAGFlow documenta REGISTER_ENABLED 0/1
+      - key: REGISTER_ENABLED
+        value: "0"
+
+      # --- Admin automático ---
+      # RAGFlow crea el superuser leyendo DEFAULT_SUPERUSER_* (si no existen, usa admin@ragflow.io/admin)
+      - key: DEFAULT_SUPERUSER_EMAIL
+        value: iokin.pardo@bts.com
+      - key: DEFAULT_SUPERUSER_NICKNAME
+        value: BTS RAG Flow
+      - key: DEFAULT_SUPERUSER_PASSWORD
+        generateValue: true
+
+      # Motor de documentos/vector
+      - key: DOC_ENGINE
+        value: seekdb
+
+      # -------- MySQL --------
+      - key: MYSQL_HOST
+        fromService:
+          type: pserv
+          name: bts-rag-flow-mysql
+          property: host
+      - key: MYSQL_PORT
+        value: "3306"
+      - key: MYSQL_DBNAME
+        value: rag_flow
+      - key: MYSQL_USER
+        value: rag_flow
+      - key: MYSQL_PASSWORD
+        fromService:
+          type: pserv
+          name: bts-rag-flow-mysql
+          envVarKey: MYSQL_PASSWORD
+
+      # -------- MinIO --------
+      - key: MINIO_HOST
+        fromService:
+          type: pserv
+          name: bts-rag-flow-minio
+          property: host
+      - key: MINIO_USER
+        fromService:
+          type: pserv
+          name: bts-rag-flow-minio
+          envVarKey: MINIO_ROOT_USER
+      - key: MINIO_PASSWORD
+        fromService:
+          type: pserv
+          name: bts-rag-flow-minio
+          envVarKey: MINIO_ROOT_PASSWORD
+
+      # -------- Redis --------
+      - key: REDIS_HOST
+        fromService:
+          type: pserv
+          name: bts-rag-flow-redis
+          property: host
+      - key: REDIS_PORT
+        value: "6379"
+      - key: REDIS_PASSWORD
+        fromService:
+          type: pserv
+          name: bts-rag-flow-redis
+          envVarKey: REDIS_PASSWORD
+
+      # -------- SeekDB --------
+      - key: SEEKDB_HOST
+        fromService:
+          type: pserv
+          name: bts-rag-flow-seekdb
+          property: host
+      - key: SEEKDB_PORT
+        value: "2881"
+      - key: SEEKDB_USER
+        value: root
+      - key: SEEKDB_PASSWORD
+        fromService:
+          type: pserv
+          name: bts-rag-flow-seekdb
+          envVarKey: ROOT_PASSWORD
+      - key: SEEKDB_DOC_DBNAME
+        value: ragflow_doc
