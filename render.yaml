@@ -5,7 +5,7 @@ services:
   - type: pserv
     name: bts-rag-flow-mysql
     runtime: image
-    region: frankfurtF
+    region: frankfurt
     plan: starter
     image:
       url: mysql:8.0.39
