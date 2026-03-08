@@ -1,7 +1,4 @@
 services:
-  # ----------------------------
-  # MySQL (metadata de RAGFlow)
-  # ----------------------------
   - type: pserv
     name: bts-rag-flow-mysql
     runtime: image
@@ -23,30 +20,24 @@ services:
       - key: MYSQL_ROOT_PASSWORD
         generateValue: true
 
-  # ----------------------------
-  # MinIO (ficheros subidos)
-  # ----------------------------
   - type: pserv
-  name: bts-rag-flow-minio
-  runtime: image
-  region: frankfurt
-  plan: starter
-  image:
-    url: quay.io/minio/minio:RELEASE.2025-06-13T11-33-47Z
-  dockerCommand: minio server /data --console-address :9001
-  disk:
-    name: minio-data
-    mountPath: /data
-    sizeGB: 50
-  envVars:
-    - key: MINIO_ROOT_USER
-      value: rag_flow
-    - key: MINIO_ROOT_PASSWORD
-      generateValue: true
+    name: bts-rag-flow-minio
+    runtime: image
+    region: frankfurt
+    plan: starter
+    image:
+      url: quay.io/minio/minio:RELEASE.2025-06-13T11-33-47Z
+    dockerCommand: minio server /data --console-address :9001
+    disk:
+      name: minio-data
+      mountPath: /data
+      sizeGB: 50
+    envVars:
+      - key: MINIO_ROOT_USER
+        value: rag_flow
+      - key: MINIO_ROOT_PASSWORD
+        generateValue: true
 
-  # ----------------------------
-  # Redis/Valkey (cola/cache)
-  # ----------------------------
   - type: pserv
     name: bts-rag-flow-redis
     runtime: image
@@ -63,14 +54,10 @@ services:
       - key: REDIS_PASSWORD
         generateValue: true
 
-  # ----------------------------
-  # SeekDB (motor doc/vector) - recomendado para Render
-  # ----------------------------
   - type: pserv
     name: bts-rag-flow-seekdb
     runtime: image
     region: frankfurt
-    # RECOMENDADO: subir plan aquí si sigue inicializando lento
     plan: starter
     image:
       url: oceanbase/seekdb:latest
@@ -86,37 +73,32 @@ services:
       - key: REPORTER
         value: bts-rag-flow-seekdb
 
-  # ----------------------------
-  # RAGFlow (Web Service público)
-  # ----------------------------
   - type: web
-  name: bts-rag-flow
-  runtime: image
-  region: frankfurt
-  plan: pro
-  image:
-    url: infiniflow/ragflow:v0.24.0
+    name: bts-rag-flow
+    runtime: image
+    region: frankfurt
+    plan: pro
+    image:
+      url: infiniflow/ragflow:v0.24.0
+    dockerCommand: /bin/sh -lc "sleep 240 && exec ./entrypoint.sh --init-superuser"
+    healthCheckPath: /
+    envVars:
+      - key: TZ
+        value: Europe/Madrid
 
-  dockerCommand: /bin/sh -lc "sleep 240 && exec ./entrypoint.sh --init-superuser"
+      - key: REGISTER_ENABLED
+        value: "0"
 
-  envVars:
-    - key: TZ
-      value: Europe/Madrid
+      - key: DEFAULT_SUPERUSER_EMAIL
+        value: iokin.pardo@bts.com
+      - key: DEFAULT_SUPERUSER_NICKNAME
+        value: BTS RAG Flow
+      - key: DEFAULT_SUPERUSER_PASSWORD
+        generateValue: true
 
-    - key: REGISTER_ENABLED
-      value: "0"
+      - key: DOC_ENGINE
+        value: seekdb
 
-    - key: DEFAULT_SUPERUSER_EMAIL
-      value: iokin.pardo@bts.com
-    - key: DEFAULT_SUPERUSER_NICKNAME
-      value: BTS RAG Flow
-    - key: DEFAULT_SUPERUSER_PASSWORD
-      generateValue: true
-
-    - key: DOC_ENGINE
-      value: seekdb
-
-      # -------- MySQL --------
       - key: MYSQL_HOST
         fromService:
           type: pserv
@@ -134,24 +116,22 @@ services:
           name: bts-rag-flow-mysql
           envVarKey: MYSQL_PASSWORD
 
-      # -------- MinIO --------
       - key: MINIO_HOST
-      fromService:
-        type: pserv
-        name: bts-rag-flow-minio
-        property: host
-    - key: MINIO_USER
-      fromService:
-        type: pserv
-        name: bts-rag-flow-minio
-        envVarKey: MINIO_ROOT_USER
-    - key: MINIO_PASSWORD
-      fromService:
-        type: pserv
-        name: bts-rag-flow-minio
-        envVarKey: MINIO_ROOT_PASSWORD
+        fromService:
+          type: pserv
+          name: bts-rag-flow-minio
+          property: host
+      - key: MINIO_USER
+        fromService:
+          type: pserv
+          name: bts-rag-flow-minio
+          envVarKey: MINIO_ROOT_USER
+      - key: MINIO_PASSWORD
+        fromService:
+          type: pserv
+          name: bts-rag-flow-minio
+          envVarKey: MINIO_ROOT_PASSWORD
 
-      # -------- Redis --------
       - key: REDIS_HOST
         fromService:
           type: pserv
@@ -165,7 +145,6 @@ services:
           name: bts-rag-flow-redis
           envVarKey: REDIS_PASSWORD
 
-      # -------- SeekDB --------
       - key: SEEKDB_HOST
         fromService:
           type: pserv
