@@ -5,7 +5,7 @@ services:
   - type: pserv
     name: bts-rag-flow-mysql
     runtime: image
-    region: frankfurt
+    region: frankfurtF
     plan: starter
     image:
       url: mysql:8.0.39
@@ -27,22 +27,22 @@ services:
   # MinIO (ficheros subidos)
   # ----------------------------
   - type: pserv
-    name: bts-rag-flow-minio
-    runtime: image
-    region: frankfurt
-    plan: starter
-    image:
-      url: quay.io/minio/minio:RELEASE.2025-06-13T11-33-47Z
-    dockerCommand: minio server /data --address :10000 --console-address :9001
-    disk:
-      name: minio-data
-      mountPath: /data
-      sizeGB: 50
-    envVars:
-      - key: MINIO_ROOT_USER
-        value: rag_flow
-      - key: MINIO_ROOT_PASSWORD
-        generateValue: true
+  name: bts-rag-flow-minio
+  runtime: image
+  region: frankfurt
+  plan: starter
+  image:
+    url: quay.io/minio/minio:RELEASE.2025-06-13T11-33-47Z
+  dockerCommand: minio server /data --console-address :9001
+  disk:
+    name: minio-data
+    mountPath: /data
+    sizeGB: 50
+  envVars:
+    - key: MINIO_ROOT_USER
+      value: rag_flow
+    - key: MINIO_ROOT_PASSWORD
+      generateValue: true
 
   # ----------------------------
   # Redis/Valkey (cola/cache)
@@ -90,33 +90,31 @@ services:
   # RAGFlow (Web Service público)
   # ----------------------------
   - type: web
-    name: bts-rag-flow
-    runtime: image
-    region: frankfurt
-    plan: pro
-    image:
-      url: infiniflow/ragflow:v0.24.0
+  name: bts-rag-flow
+  runtime: image
+  region: frankfurt
+  plan: pro
+  image:
+    url: infiniflow/ragflow:v0.24.0
 
-    dockerCommand: ./entrypoint.sh --init-superuser
+  dockerCommand: /bin/sh -lc "sleep 240 && exec ./entrypoint.sh --init-superuser"
 
-    healthCheckPath: /
+  envVars:
+    - key: TZ
+      value: Europe/Madrid
 
-    envVars:
-      - key: TZ
-        value: Europe/Madrid
+    - key: REGISTER_ENABLED
+      value: "0"
 
-      - key: REGISTER_ENABLED
-        value: "0"
+    - key: DEFAULT_SUPERUSER_EMAIL
+      value: iokin.pardo@bts.com
+    - key: DEFAULT_SUPERUSER_NICKNAME
+      value: BTS RAG Flow
+    - key: DEFAULT_SUPERUSER_PASSWORD
+      generateValue: true
 
-      - key: DEFAULT_SUPERUSER_EMAIL
-        value: iokin.pardo@bts.com
-      - key: DEFAULT_SUPERUSER_NICKNAME
-        value: BTS RAG Flow
-      - key: DEFAULT_SUPERUSER_PASSWORD
-        generateValue: true
-
-      - key: DOC_ENGINE
-        value: seekdb
+    - key: DOC_ENGINE
+      value: seekdb
 
       # -------- MySQL --------
       - key: MYSQL_HOST
@@ -138,17 +136,20 @@ services:
 
       # -------- MinIO --------
       - key: MINIO_HOST
-        value: bts-rag-flow-minio:10000
-      - key: MINIO_USER
-        fromService:
-          type: pserv
-          name: bts-rag-flow-minio
-          envVarKey: MINIO_ROOT_USER
-      - key: MINIO_PASSWORD
-        fromService:
-          type: pserv
-          name: bts-rag-flow-minio
-          envVarKey: MINIO_ROOT_PASSWORD
+      fromService:
+        type: pserv
+        name: bts-rag-flow-minio
+        property: host
+    - key: MINIO_USER
+      fromService:
+        type: pserv
+        name: bts-rag-flow-minio
+        envVarKey: MINIO_ROOT_USER
+    - key: MINIO_PASSWORD
+      fromService:
+        type: pserv
+        name: bts-rag-flow-minio
+        envVarKey: MINIO_ROOT_PASSWORD
 
       # -------- Redis --------
       - key: REDIS_HOST
