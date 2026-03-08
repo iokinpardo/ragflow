@@ -85,10 +85,10 @@ services:
       - key: REPORTER
         value: bts-rag-flow-seekdb
 
-    # ----------------------------
+  # ----------------------------
   # RAGFlow (Web Service público)
   # ----------------------------
-    - type: web
+  - type: web
     name: bts-rag-flow
     runtime: image
     region: frankfurt
@@ -97,13 +97,13 @@ services:
     image:
       url: infiniflow/ragflow:v0.24.0
 
+    # Espera a que SeekDB esté accesible antes de arrancar RAGFlow
     dockerCommand: /bin/sh -lc "python -c \"import socket,time,sys; host='bts-rag-flow-seekdb'; port=2881; deadline=time.time()+900; \
 while True: \
   try: \
     s=socket.create_connection((host,port),timeout=2); s.close(); print('SeekDB is reachable'); break; \
   except Exception as e: \
-    print('Waiting for SeekDB...', e); \
-    time.sleep(5); \
+    print('Waiting for SeekDB...', e); time.sleep(5); \
     if time.time()>deadline: print('Timeout waiting for SeekDB:', e); sys.exit(1)\" && exec ./entrypoint.sh --init-superuser"
 
     healthCheckPath: /
@@ -112,12 +112,14 @@ while True: \
       - key: TZ
         value: Europe/Madrid
 
+      # (Opcional) puedes dejarlo, pero lo crítico es MINIO_HOST con puerto
       - key: MINIO_PORT
         value: "10000"
 
       - key: REGISTER_ENABLED
         value: "0"
 
+      # --- Admin automático ---
       - key: DEFAULT_SUPERUSER_EMAIL
         value: iokin.pardo@bts.com
       - key: DEFAULT_SUPERUSER_NICKNAME
@@ -125,9 +127,11 @@ while True: \
       - key: DEFAULT_SUPERUSER_PASSWORD
         generateValue: true
 
+      # Motor de documentos/vector
       - key: DOC_ENGINE
         value: seekdb
 
+      # -------- MySQL --------
       - key: MYSQL_HOST
         fromService:
           type: pserv
@@ -145,6 +149,7 @@ while True: \
           name: bts-rag-flow-mysql
           envVarKey: MYSQL_PASSWORD
 
+      # -------- MinIO --------
       - key: MINIO_HOST
         value: bts-rag-flow-minio:10000
       - key: MINIO_USER
@@ -158,6 +163,7 @@ while True: \
           name: bts-rag-flow-minio
           envVarKey: MINIO_ROOT_PASSWORD
 
+      # -------- Redis --------
       - key: REDIS_HOST
         fromService:
           type: pserv
@@ -171,6 +177,7 @@ while True: \
           name: bts-rag-flow-redis
           envVarKey: REDIS_PASSWORD
 
+      # -------- SeekDB --------
       - key: SEEKDB_HOST
         fromService:
           type: pserv
