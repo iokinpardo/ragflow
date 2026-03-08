@@ -73,29 +73,32 @@ services:
       - key: REPORTER
         value: bts-rag-flow-seekdb
 
-  - type: web
+    - type: web
     name: bts-rag-flow
     runtime: image
     region: frankfurt
     plan: pro
     image:
       url: infiniflow/ragflow:v0.24.0
-    dockerCommand: /bin/sh -lc "sleep 240 && exec ./entrypoint.sh --init-superuser"
+
+    dockerCommand:
+      - /bin/sh
+      - -c
+      - sleep 240; exec ./entrypoint.sh --init-superuser
+
     healthCheckPath: /
+
     envVars:
       - key: TZ
         value: Europe/Madrid
-
       - key: REGISTER_ENABLED
         value: "0"
-
       - key: DEFAULT_SUPERUSER_EMAIL
         value: iokin.pardo@bts.com
       - key: DEFAULT_SUPERUSER_NICKNAME
         value: BTS RAG Flow
       - key: DEFAULT_SUPERUSER_PASSWORD
         generateValue: true
-
       - key: DOC_ENGINE
         value: seekdb
 
