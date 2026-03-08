@@ -70,6 +70,7 @@ services:
     name: bts-rag-flow-seekdb
     runtime: image
     region: frankfurt
+    # RECOMENDADO: subir plan aquí si sigue inicializando lento
     plan: starter
     image:
       url: oceanbase/seekdb:latest
@@ -81,7 +82,7 @@ services:
       - key: ROOT_PASSWORD
         generateValue: true
       - key: MEMORY_LIMIT
-        value: 2G
+        value: 4G
       - key: REPORTER
         value: bts-rag-flow-seekdb
 
@@ -93,24 +94,10 @@ services:
     runtime: image
     region: frankfurt
     plan: pro
-
     image:
       url: infiniflow/ragflow:v0.24.0
 
-    # Espera a que SeekDB esté accesible antes de arrancar RAGFlow
-    dockerCommand: '/bin/sh -lc "python -c \"import socket,time,sys; h='\''bts-rag-flow-seekdb'\''; p=2881; d=time.time()+900; \
-import errno; \
-\
-def ok(): \
-  s=socket.create_connection((h,p),timeout=2); s.close(); \
-\
-\
-while True: \
-  try: ok(); print('\''SeekDB is reachable'\''); break \
-  except Exception as e: \
-    print('\''Waiting for SeekDB...'\'' , e); time.sleep(5); \
-    \
-    if time.time()>d: print('\''Timeout waiting for SeekDB:'\'' , e); sys.exit(1)\" && exec ./entrypoint.sh --init-superuser"'
+    dockerCommand: ./entrypoint.sh --init-superuser
 
     healthCheckPath: /
 
@@ -118,14 +105,9 @@ while True: \
       - key: TZ
         value: Europe/Madrid
 
-      # (Opcional) puedes dejarlo, pero lo crítico es MINIO_HOST con puerto
-      - key: MINIO_PORT
-        value: "10000"
-
       - key: REGISTER_ENABLED
         value: "0"
 
-      # --- Admin automático ---
       - key: DEFAULT_SUPERUSER_EMAIL
         value: iokin.pardo@bts.com
       - key: DEFAULT_SUPERUSER_NICKNAME
@@ -133,7 +115,6 @@ while True: \
       - key: DEFAULT_SUPERUSER_PASSWORD
         generateValue: true
 
-      # Motor de documentos/vector
       - key: DOC_ENGINE
         value: seekdb
 
