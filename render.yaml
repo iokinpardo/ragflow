@@ -73,94 +73,94 @@ services:
       - key: REPORTER
         value: bts-rag-flow-seekdb
 
-    - type: web
-      name: bts-rag-flow
-      runtime: image
-      region: frankfurt
-      plan: pro
-      image:
-        url: infiniflow/ragflow:v0.24.0
-  
-      dockerCommand:
-        - /bin/sh
-        - -c
-        - sleep 240; exec ./entrypoint.sh --init-superuser
-  
-      healthCheckPath: /
-  
-      envVars:
-        - key: TZ
-          value: Europe/Madrid
-        - key: REGISTER_ENABLED
-          value: "0"
-        - key: DEFAULT_SUPERUSER_EMAIL
-          value: iokin.pardo@bts.com
-        - key: DEFAULT_SUPERUSER_NICKNAME
-          value: BTS RAG Flow
-        - key: DEFAULT_SUPERUSER_PASSWORD
-          generateValue: true
-        - key: DOC_ENGINE
-          value: seekdb
-  
-        - key: MYSQL_HOST
-          fromService:
-            type: pserv
-            name: bts-rag-flow-mysql
-            property: host
-        - key: MYSQL_PORT
-          value: "3306"
-        - key: MYSQL_DBNAME
-          value: rag_flow
-        - key: MYSQL_USER
-          value: rag_flow
-        - key: MYSQL_PASSWORD
-          fromService:
-            type: pserv
-            name: bts-rag-flow-mysql
-            envVarKey: MYSQL_PASSWORD
-  
-        - key: MINIO_HOST
-          fromService:
-            type: pserv
-            name: bts-rag-flow-minio
-            property: host
-        - key: MINIO_USER
-          fromService:
-            type: pserv
-            name: bts-rag-flow-minio
-            envVarKey: MINIO_ROOT_USER
-        - key: MINIO_PASSWORD
-          fromService:
-            type: pserv
-            name: bts-rag-flow-minio
-            envVarKey: MINIO_ROOT_PASSWORD
-  
-        - key: REDIS_HOST
-          fromService:
-            type: pserv
-            name: bts-rag-flow-redis
-            property: host
-        - key: REDIS_PORT
-          value: "6379"
-        - key: REDIS_PASSWORD
-          fromService:
-            type: pserv
-            name: bts-rag-flow-redis
-            envVarKey: REDIS_PASSWORD
-  
-        - key: SEEKDB_HOST
-          fromService:
-            type: pserv
-            name: bts-rag-flow-seekdb
-            property: host
-        - key: SEEKDB_PORT
-          value: "2881"
-        - key: SEEKDB_USER
-          value: root
-        - key: SEEKDB_PASSWORD
-          fromService:
-            type: pserv
-            name: bts-rag-flow-seekdb
-            envVarKey: ROOT_PASSWORD
-        - key: SEEKDB_DOC_DBNAME
-          value: ragflow_doc
+  - type: web
+    name: bts-rag-flow
+    runtime: image
+    region: frankfurt
+    plan: pro
+    image:
+      url: infiniflow/ragflow:v0.24.0
+
+    dockerCommand:
+      - /bin/sh
+      - -c
+      - sleep 240; exec ./entrypoint.sh --init-superuser
+
+    healthCheckPath: /
+
+    envVars:
+      - key: TZ
+        value: Europe/Madrid
+      - key: REGISTER_ENABLED
+        value: "0"
+      - key: DEFAULT_SUPERUSER_EMAIL
+        value: iokin.pardo@bts.com
+      - key: DEFAULT_SUPERUSER_NICKNAME
+        value: BTS RAG Flow
+      - key: DEFAULT_SUPERUSER_PASSWORD
+        generateValue: true
+      - key: DOC_ENGINE
+        value: seekdb
+
+      - key: MYSQL_HOST
+        fromService:
+          type: pserv
+          name: bts-rag-flow-mysql
+          property: host
+      - key: MYSQL_PORT
+        value: "3306"
+      - key: MYSQL_DBNAME
+        value: rag_flow
+      - key: MYSQL_USER
+        value: rag_flow
+      - key: MYSQL_PASSWORD
+        fromService:
+          type: pserv
+          name: bts-rag-flow-mysql
+          envVarKey: MYSQL_PASSWORD
+
+      - key: MINIO_HOST
+        fromService:
+          type: pserv
+          name: bts-rag-flow-minio
+          property: host
+      - key: MINIO_USER
+        fromService:
+          type: pserv
+          name: bts-rag-flow-minio
+          envVarKey: MINIO_ROOT_USER
+      - key: MINIO_PASSWORD
+        fromService:
+          type: pserv
+          name: bts-rag-flow-minio
+          envVarKey: MINIO_ROOT_PASSWORD
+
+      - key: REDIS_HOST
+        fromService:
+          type: pserv
+          name: bts-rag-flow-redis
+          property: host
+      - key: REDIS_PORT
+        value: "6379"
+      - key: REDIS_PASSWORD
+        fromService:
+          type: pserv
+          name: bts-rag-flow-redis
+          envVarKey: REDIS_PASSWORD
+
+      - key: SEEKDB_HOST
+        fromService:
+          type: pserv
+          name: bts-rag-flow-seekdb
+          property: host
+      - key: SEEKDB_PORT
+        value: "2881"
+      - key: SEEKDB_USER
+        value: root
+      - key: SEEKDB_PASSWORD
+        fromService:
+          type: pserv
+          name: bts-rag-flow-seekdb
+          envVarKey: ROOT_PASSWORD
+      - key: SEEKDB_DOC_DBNAME
+        value: ragflow_doc
