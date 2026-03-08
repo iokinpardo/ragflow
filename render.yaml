@@ -80,7 +80,7 @@ services:
     plan: pro
     image:
       url: infiniflow/ragflow:v0.24.0
-    dockerCommand: 'sleep 420 && ./entrypoint.sh --init-superuser'
+    dockerCommand: 'sh -c "for svc in \"$MYSQL_HOST:$MYSQL_PORT:$MYSQL_USER:$MYSQL_PASSWORD\" \"$SEEKDB_HOST:$SEEKDB_PORT:$SEEKDB_USER:$SEEKDB_PASSWORD\"; do IFS=: read h p u pw <<< \"$svc\"; echo Waiting for $h:$p...; for i in $(seq 1 90); do mysqladmin ping -h $h -P $p -u $u -p$pw --silent 2>/dev/null && break; sleep 10; done; done && ./entrypoint.sh --init-superuser"'
     healthCheckPath: /
 
     envVars:
