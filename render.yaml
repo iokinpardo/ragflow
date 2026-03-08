@@ -80,7 +80,7 @@ services:
     plan: pro
     image:
       url: infiniflow/ragflow:v0.24.0
-    dockerCommand: >- sh -c "until mysqladmin ping -h $MYSQL_HOST -u $MYSQL_USER -p$MYSQL_PASSWORD --silent; do sleep 5; done && ./entrypoint.sh --init-superuser"
+    dockerCommand: 'sleep 420 && ./entrypoint.sh --init-superuser'
     healthCheckPath: /
 
     envVars:
