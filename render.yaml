@@ -33,7 +33,7 @@ services:
     plan: starter
     image:
       url: quay.io/minio/minio:RELEASE.2025-06-13T11-33-47Z
-    dockerCommand: server --console-address :9001 /data
+    dockerCommand: minio server /data --console-address ":9001"
     disk:
       name: minio-data
       mountPath: /data
