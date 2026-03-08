@@ -80,7 +80,7 @@ services:
     plan: pro
     image:
       url: infiniflow/ragflow:v0.24.0
-    dockerCommand: "/bin/sh -c 'sleep 420 && ./entrypoint.sh --init-superuser'"
+    dockerCommand: '/bin/sh -c "sleep 420 && ./entrypoint.sh --init-superuser"'
     healthCheckPath: /
 
     envVars:
