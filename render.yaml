@@ -98,13 +98,7 @@ services:
       url: infiniflow/ragflow:v0.24.0
 
     # Espera a que SeekDB esté accesible antes de arrancar RAGFlow
-    dockerCommand: '/bin/sh -lc "python -c \"import socket,time,sys; host='\''bts-rag-flow-seekdb'\''; port=2881; deadline=time.time()+900; 
-while True:
-  try:
-    s=socket.create_connection((host,port),timeout=2); s.close(); print('\''SeekDB is reachable'\''); break
-  except Exception as e:
-    print('\''Waiting for SeekDB...'\'', e); time.sleep(5)
-    if time.time()>deadline: print('\''Timeout waiting for SeekDB:'\'', e); sys.exit(1)\" && exec ./entrypoint.sh --init-superuser"'
+    dockerCommand: '/bin/sh -lc "i=0; until (echo > /dev/tcp/bts-rag-flow-seekdb/2881) 2>/dev/null; do i=$((i+1)); if [ $i -gt 180 ]; then echo timeout; exit 1; fi; echo waiting seekdb; sleep 5; done; exec ./entrypoint.sh --init-superuser"''
 
     healthCheckPath: /
 
