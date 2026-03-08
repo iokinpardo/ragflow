@@ -102,13 +102,16 @@ services:
 
     # IMPORTANTE: inicializa el superusuario en el arranque
     # (el entrypoint de RAGFlow soporta --init-superuser)
-    dockerCommand: /ragflow/docker/entrypoint.sh --init-superuser
+    dockerCommand: ./entrypoint.sh --init-superuser
 
     healthCheckPath: /
 
     envVars:
       - key: TZ
         value: Europe/Madrid
+
+      - key: MINIO_PORT
+        value: "10000"
 
       # Si quieres bloquear registro público:
       # RAGFlow documenta REGISTER_ENABLED 0/1
